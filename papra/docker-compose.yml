@@ -1,0 +1,21 @@
+services:
+  papra:
+    # image: ghcr.io/papra-hq/papra:latest
+    image: papra-custom:latest
+    build:
+      context: https://github.com/magic0whi/papra.git#fix/pdf-special-fonts
+      dockerfile: packages/app/Dockerfile.rootless
+    container_name: papra
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:1221:1221
+    env_file:
+      - secret.env
+    environment:
+      - APP_BASE_URL=https://papra.proteus.eu.org
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/proteus_ca.pub.pem
+      - DOCUMENTS_OCR_LANGUAGES=chi_sim,chi_tra,eng
+    volumes:
+      - ./app-data:/app/app-data
+      - /home/proteus/nixos_configs_flake/secrets/proteus_ca.pub.pem:/etc/ssl/certs/proteus_ca.pub.pem:ro
+    user: 1000:1000

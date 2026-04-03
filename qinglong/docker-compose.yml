@@ -1,0 +1,13 @@
+services:
+  web:
+    image: whyour/qinglong:latest # 基于 Debian 的版本：whyour/qinglong:debian
+    volumes:
+      - ./data:/ql/data
+    ports:
+      - "127.0.0.1:5700:5700"
+    environment:
+      - TZ=Asia/Hong_Kong
+      - QlBaseUrl=/ # 部署路径非必须，以斜杠开头和结尾，比如 /test/
+      - NODE_OPTIONS=--dns-result-order=ipv4first
+    restart: unless-stopped
+# for `ql`, run `docker exec -it qinglong-web-1 /ql/shell/update.sh`
