@@ -15,6 +15,8 @@ services:
       - APP_BASE_URL=https://papra.proteus.eu.org
       - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/proteus_ca.pub.pem
       - DOCUMENTS_OCR_LANGUAGES=chi_sim,chi_tra,eng
+      - MAX_ORGANIZATION_COUNT_PER_USER=40
+      - DOCUMENT_STORAGE_MAX_UPLOAD_SIZE=104857600
     volumes:
       - ./app-data:/app/app-data
       - /home/proteus/nixos_configs_flake/secrets/proteus_ca.pub.pem:/etc/ssl/certs/proteus_ca.pub.pem:ro
