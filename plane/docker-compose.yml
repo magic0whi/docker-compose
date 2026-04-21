@@ -34,7 +34,7 @@ x-proxy-env: &proxy-env
   APP_DOMAIN: ${APP_DOMAIN:-localhost}
   FILE_SIZE_LIMIT: ${FILE_SIZE_LIMIT:-5242880}
   # If SSL Cert to be generated, set CERT_EMAIl="email <EMAIL_ADDRESS>"
-  CERT_EMAIL: ${CERT_EMAIL}
+  CERT_EMAIL: ${CERT_EMAIL:-}
   # For DNS Challenge based certificate generation, set the CERT_ACME_DNS, CERT_EMAIL
   # CERT_ACME_DNS="acme_dns <CERT_DNS_PROVIDER> <CERT_DNS_PROVIDER_API_KEY>"
   CERT_ACME_CA: ${CERT_ACME_CA:-https://acme-v02.api.letsencrypt.org/directory}
@@ -56,6 +56,8 @@ x-live-env: &live-env
   LIVE_SERVER_SECRET_KEY: ${LIVE_SERVER_SECRET_KEY}
 
 x-app-env: &app-env
+  REQUESTS_CA_BUNDLE: ${REQUESTS_CA_BUNDLE:-/usr/local/share/ca-certificates/proteus_ca.crt}
+  NODE_EXTRA_CA_CERTS: ${NODE_EXTRA_CA_CERTS:-/usr/local/share/ca-certificates/proteus_ca.crt}
   WEB_URL: ${WEB_URL:-http://localhost}
   DEBUG: ${DEBUG:-0}
   CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
@@ -71,6 +73,11 @@ x-app-env: &app-env
   # Force HTTPS for handling SSL Termination
   MINIO_ENDPOINT_SSL: ${MINIO_ENDPOINT_SSL:-0}
   LIVE_SERVER_SECRET_KEY: ${LIVE_SERVER_SECRET_KEY}
+  IS_GITEA_ENABLED: ${IS_GITEA_ENABLED:-0}
+  GITEA_HOST: ${GITEA_HOST:-}
+  GITEA_CLIENT_ID: ${GITEA_CLIENT_ID:-plane}
+  GITEA_CLIENT_SECRET: ${GITEA_CLIENT_SECRET:-}
+  ENABLE_GITEA_SYNC: ${ENABLE_GITEA_SYNC:-0}
 
 services:
   web:
@@ -125,6 +132,9 @@ services:
         condition: any
     volumes:
       - logs_api:/code/plane/logs
+      - ./gitea_authelia.py:/code/plane/authentication/provider/oauth/gitea.py
+      # TODO: Use a varable to wrapper this
+      - /home/proteus/Works/nixos_configs_flake/secrets/proteus_ca.pub.pem:/usr/local/share/ca-certificates/proteus_ca.crt:ro
     environment:
       <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
     depends_on:
@@ -141,6 +151,8 @@ services:
         condition: any
     volumes:
       - logs_worker:/code/plane/logs
+      - ./gitea_authelia.py:/code/plane/authentication/provider/oauth/gitea.py
+      - /home/proteus/Works/nixos_configs_flake/secrets/proteus_ca.pub.pem:/usr/local/share/ca-certificates/proteus_ca.crt:ro
     environment:
       <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
     depends_on:
@@ -158,6 +170,8 @@ services:
         condition: any
     volumes:
       - logs_beat-worker:/code/plane/logs
+      - ./gitea_authelia.py:/code/plane/authentication/provider/oauth/gitea.py
+      - /home/proteus/Works/nixos_configs_flake/secrets/proteus_ca.pub.pem:/usr/local/share/ca-certificates/proteus_ca.crt:ro
     environment:
       <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
     depends_on:
@@ -175,6 +189,8 @@ services:
         condition: on-failure
     volumes:
       - logs_migrator:/code/plane/logs
+      - ./gitea_authelia.py:/code/plane/authentication/provider/oauth/gitea.py
+      - /home/proteus/Works/nixos_configs_flake/secrets/proteus_ca.pub.pem:/usr/local/share/ca-certificates/proteus_ca.crt:ro
     environment:
       <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
     depends_on:
@@ -263,12 +279,62 @@ services:
 
 volumes:
   pgdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/pgdata
   redisdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/redisdata
   uploads:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/uploads
   logs_api:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/logs_api
   logs_worker:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/logs_worker
   logs_beat-worker:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/logs_beat-worker
   logs_migrator:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/logs_migrator
   rabbitmq_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/rabbitmq_data
   proxy_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/proxy_config
   proxy_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /srv/plane/proxy_data

@@ -19,5 +19,6 @@ services:
       - DOCUMENT_STORAGE_MAX_UPLOAD_SIZE=104857600
     volumes:
       - /srv/papra:/app/app-data
+      # TODO: Use a variable to wrapper this
       - /home/proteus/Works/nixos_configs_flake/secrets/proteus_ca.pub.pem:/etc/ssl/certs/proteus_ca.pub.pem:ro
     user: 1000:1000
