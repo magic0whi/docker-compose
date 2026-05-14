@@ -4,6 +4,7 @@ services:
     image: papra-custom:latest
     build:
       context: https://github.com/magic0whi/papra.git#fix/pdf-special-fonts
+      # context: /home/proteus/Works/Reference/papra
       dockerfile: packages/app/Dockerfile.rootless
     container_name: papra
     restart: unless-stopped

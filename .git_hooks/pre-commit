@@ -23,8 +23,21 @@ if [ -n "$BAD_EQUALS" ]; then
   ERRORS_FOUND=1
 fi
 
+# Sanity check: Ensure docker-compose.yml in depth 1 does not use a local repository
+# Scans for 'context:' followed by a local path indicator like '/' (absolute) or '.' (relative)
+for compose_file in $(find . -maxdepth 2 -type f -name docker-compose.yml 2>/dev/null); do
+  LOCAL_REPO=$(rg -n "^[ \t]*context:[ \t]*(/|\.)" "$compose_file")
+  if [ -n "$LOCAL_REPO" ]; then
+    echo "❌ Sanity check failed: Local repository path found in $compose_file."
+    echo "Please revert 'context' back to the remote Git repository URL before committing."
+    # Highlight the offending 'context' line in red
+    echo $LOCAL_REPO | rg --color=always "^\d+: context:.*"
+    ERRORS_FOUND=1
+  fi
+done
+
 # Reject the commit if any checks failed
 if [ "$ERRORS_FOUND" = "1" ]; then
-  echo "🚫 Commit rejected. Please fix the formatting issues and stage the files again."
+  echo "🚫 Commit rejected. Please fix the formatting/sanity issues and stage the files again."
   exit 1
 fi

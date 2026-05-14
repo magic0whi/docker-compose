@@ -2,7 +2,8 @@ version: "3.3"
 services:
   samba-dc:
     build:
-      context: ./samba-dc
+      # TODO
+      # context: ./samba-dc
       dockerfile: Dockerfile
       args:
         BUILD_DATE: $$(date --iso-8601=ns)
