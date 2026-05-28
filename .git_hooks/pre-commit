@@ -23,15 +23,18 @@ if [ -n "$BAD_EQUALS" ]; then
   ERRORS_FOUND=1
 fi
 
-# Sanity check: Ensure docker-compose.yml in depth 1 does not use a local repository
-# Scans for 'context:' followed by a local path indicator like '/' (absolute) or '.' (relative)
-for compose_file in $(find . -maxdepth 2 -type f -name docker-compose.yml 2>/dev/null); do
-  LOCAL_REPO=$(rg -n "^[ \t]*context:[ \t]*(/|\.)" "$compose_file")
+# Ensure docker-compose.yml in depth 1 does not use a local repository
+# Scans changed files for 'context:' followed by a local path indicator like '/' (absolute) or '.' (relative)
+# The pathspecs target the immediate subdirectories
+for compose_file in $(git diff --cached --name-only --diff-filter=ACM "*/docker-compose.yml"); do
+  # Inspect only the added/modified lines in the staged diff for this file
+  # Regex explanation: ^\+ targets diff additions, avoiding matches on removed lines (-) or surrounding context
+  LOCAL_REPO=$(git diff --cached -U0 -- "$compose_file" | rg '^\+[ \t]*context:[ \t]*(/|\.)')
+
   if [ -n "$LOCAL_REPO" ]; then
-    echo "❌ Sanity check failed: Local repository path found in $compose_file."
+    echo "❌ Sanity check failed: Local repository path found in staged changes of $compose_file."
     echo "Please revert 'context' back to the remote Git repository URL before committing."
-    # Highlight the offending 'context' line in red
-    echo $LOCAL_REPO | rg --color=always "^\d+: context:.*"
+    echo "$LOCAL_REPO" | rg --color=always 'context:.*'
     ERRORS_FOUND=1
   fi
 done
